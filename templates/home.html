@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        h1 {
+            margin-top: 1rem;
+        }
+
+        .btn-container {
+            display: flex;
+
+            justify-content: center;
+            margin-top: 6rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right:2rem;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        @media screen and (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .btn-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Our App!</h1>
+        <div class="btn-container">
+            <a href="/signuppage" class="btn">Sign Up</a>
+            <a href="/loginpage" class="btn">Login</a>
+        </div>
+    </div>
+</body>
+</html>
