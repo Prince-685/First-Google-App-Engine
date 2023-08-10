@@ -1,39 +1,43 @@
 from flask import *
+from flask_mail import Mail, Message
 import pyotp
-from google.cloud import ndb
+from google.cloud import ndb,storage
 from model import User
-import smtplib
-from email.mime.text import MIMEText
+# from werkzeug.utils import secure_filename
+# from moviepy.editor import VideoFileClip
+# import subprocess
+import ffmpeg
 
 app = Flask(__name__)
+mail= Mail(app)
+# app.config['UPLOAD_FOLDER'] = 'uploads'
+
+
+app.config['MAIL_SERVER']='smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'pagalno351@gmail.com'
+app.config['MAIL_PASSWORD'] = 'lfpbgslenaxxeqco'
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
+
+secret = pyotp.random_base32()
 
 
 def send_otp_email(email, otp):
-    from_email = 'pagalno351@gmail.com'  
-    password = 'Prince@123'       
-
-    subject = 'Your OTP for Login'
-    message = f'Your OTP is: {otp}'
-
-    msg = MIMEText(message)
-    msg['From'] = from_email
-    msg['To'] = email
-    msg['Subject'] = subject
-
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)  
-        server.starttls()
-        server.login(from_email, password)
-        server.sendmail(from_email, [email], msg.as_string())
-        server.quit()
-        print("OTP sent successfully")
+        msg = Message('OTP', sender = 'pagalno351@gmail.com', recipients = [email])
+        msg.body = f'Your OTP for LOgin is: {otp}'
+        mail.send(msg)
+        return True
+        
     except Exception as e:
         print("Error sending OTP:", e)
+        return False
 
 
 def generate_otp():
-    secret = pyotp.random_base32()
-    t = pyotp.TOTP(secret,interval=60,digits=6)
+    t = pyotp.TOTP(secret,interval=600,digits=6)
     otp = t.now()
     return {
         'secret':secret,
@@ -41,10 +45,31 @@ def generate_otp():
     }
 
 def verify_otp(secret,otp):
-    totp=pyotp.TOTP(secret,interval=60).verify(otp)
+    totp=pyotp.TOTP(secret,interval=600).verify(otp)
     if totp:
         return True
     return False
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'mp4', 'avi', 'mov'}
+
+import subprocess
+
+def is_resolution_valid(video_file):
+    # command = [
+    #     'ffprobe',
+    #     '-v', 'error',
+    #     '-select_streams', 'v:0',
+    #     '-show_entries', 'stream=width,height',
+    #     '-of', 'csv=p=0',
+    #     file_path
+    # ]
+    
+    # result = subprocess.run(command, stdout=subprocess.PIPE, text=True)
+    # width, height = result.stdout.strip().split(',')
+    width,height=video_file.size()
+
+    return int(width) >= 1920 and int(height) >= 1080
 
 @app.route('/')
 def home():
@@ -59,6 +84,13 @@ def signup_page():
 def login_page():
     return render_template('login.html')
 
+@app.route('/otp_page')
+def otp_page():
+    return render_template('otp.html')
+
+@app.route('/uploadpage')
+def uploadpage():
+    return render_template('Video-Upload.html')
 
 @app.route('/signup', methods=['POST'])
 def sign_up():
@@ -76,29 +108,60 @@ def sign_up():
 
 @app.route('/login',methods=['POST'])
 def login():
-    if request.method=='POST':
-        email = request.form['email']
+    try:
+        if request.method=='POST':
+            email = request.form['email']
+            client = ndb.Client()
+            with client.context():
+                user = User.query(User.email == email).get()
+                if user:
+                    data=generate_otp()
+                    p=send_otp_email(email,data['otp'])
+                    if p:
+                        return redirect(url_for('otp_page'))
+                else:
+                    return render_template('login.html')
+    except Exception as e:
+        print('err--:',e)
+        return render_template('login.html')
 
-        user = User.query(User.email == email).get()
-        if user:
-            data=generate_otp()
-            send_otp_email(email,data['otp'])
-            return redirect(url_for('verify_otp',**data))
-        else:
-            return render_template('login.html',{'msg':'Email is not registered...'})
 
+@app.route('/verify',methods=['POST'])
+def verify():
+    try:
+        if request.method=='POST':
+            otp=request.form['otp']
+            print(otp)
+            verify=verify_otp(secret,otp)
+            print(verify)
+            if verify:
+                return jsonify({'msg':'User Logged in Successfully'})
+            else:
+                return render_template('otp.html')
+    except Exception as e:
+        print('e---:',e)
+        return render_template('otp.html')
 
-@app.route('/verify_otp',methods=['POST'])
-def verify_otp():
-    secret = request.args.get('secret')
-    if request.method=='POST':
-        otp=request.form['otp']
-        verify=verify_otp(secret,otp)
-        if verify:
-            return jsonify({'msg':'User Logged in Successfully'})
-        else:
-           return render_template('otp.html',{'msg':'Enter a valid otp...'})
+@app.route('/upload',methods=['POST'])
+def upload():
+    try:
+        client = storage.Client()
+        bucket_name = 'api-assignment-395306.appspot.com'
+        bucket = client.bucket(bucket_name)
 
+        if request.method == 'POST':
+            video_file = request.files['file']
+            
+            blob = bucket.blob(video_file.filename)
+            blob.upload_from_file(video_file)
+                
+            return jsonify({'message': 'Video uploaded successfully and resolution is valid.'})
+
+    except Exception as e:
+        print('errrrr--',e)
+        return render_template('Video-Upload.html')
+
+        
 
 if __name__ == '__main__':
     app.run(debug=True)

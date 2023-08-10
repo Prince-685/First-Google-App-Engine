@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            margin: 0 auto;
+            max-width: 500px;
+            margin-top: 100px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            padding: 5px;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+ <script>
+    function checkResolution() {
+        var fileInput = document.getElementById('file');
+        var videoElement = document.createElement('video');
+
+        fileInput.addEventListener('change', function() {
+            var file = fileInput.files[0];
+            if (file) {
+                videoElement.src = URL.createObjectURL(file);
+
+                videoElement.addEventListener('loadedmetadata', function() {
+                    var width = videoElement.videoWidth;
+                    var height = videoElement.videoHeight;
+
+                    if (width >= 1920 && height >= 1080) {
+                        // Video resolution is valid
+                        document.getElementById('resolution-error').style.display = 'none';
+                    } else {
+                        // Video resolution is not valid
+                        document.getElementById('resolution-error').style.display = 'block';
+                        fileInput.value = '';  // Clear the selected file
+                    }
+                });
+            }
+        });
+    }
+</script>
+</head>
+<body onload="checkResolution()">
+<div class="container">
+    <h1 style="text-align: center;">Upload a Video</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="file">Select a video file:</label>
+        <input type="file" id="file" name="file" accept=".mp4, .avi, .mov" required>
+        <br>
+        <input type="submit" value="Upload">
+    </form>
+    <div id="resolution-error" class="failure" style="display: none;">Video resolution is not valid (must be at least 1080p).</div>
+</div>
+</body>
+</html>
