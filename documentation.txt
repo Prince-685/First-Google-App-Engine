@@ -1,6 +1,6 @@
 In this project i have deployed my flask web app on google cloud 
 
-Web app url -  http://35.244.6.83:8000/
+Web app url -  http://35.244.6.83/
 
 
 
