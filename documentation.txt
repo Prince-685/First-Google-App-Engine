@@ -1,0 +1,22 @@
+In this project i have deployed my flask web app on google cloud 
+
+Web app url -  http://35.244.6.83:8000/
+
+
+
+From above mentioned url you will get to the home page where user will get three 
+buttons are follows- 
+1.Sign Up - Click on the button it open a page where you have to sign up by entering
+            the details and click submit. If the submission is successfull it 
+            responds with a message that user signed up successfully.
+
+2.Login - Click on the login button it will get you to the login page where user have
+          to enter their email-id which is registered using the sign up. After 
+          entering email-id click on the get otp button. Now an otp is sent to your
+          entered email-id. Enter the otp which you get on your email. If entered otp is
+          correct user get a message "User logged in successfully."
+
+3.Upload Video - On clicking it will led you to a page where you can upload the video
+                 file which is greater or equal to 1080p if the selected video is less
+                 than 1080p it will not accept video file and return this message
+                 "Video resolution is not valid (must be at least 1080p)."
